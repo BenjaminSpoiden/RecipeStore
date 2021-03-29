@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">RecipeStore</string>
+    <string name="home">Home</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="menu">Menu</string>
+    <string name="meal_planner">Meal Planner</string>
 </resources>
