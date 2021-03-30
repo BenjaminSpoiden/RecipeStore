@@ -5,16 +5,19 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.lifecycleScope
 import com.ben.recipestore.R
 import com.ben.recipestore.databinding.HomeFragmentBinding
+import com.ben.recipestore.model.FailureResponse
+import com.ben.recipestore.network.ResponseHandler
+import com.ben.recipestore.network.Status
+import com.ben.recipestore.repository.RecipeStoreRepository
 import com.ben.recipestore.ui.BaseFragment
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 
+@AndroidEntryPoint
 class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchView.OnQueryTextListener {
-
-    companion object {
-        fun newInstance() = HomeFragment()
-    }
-
 
     override fun bindFragment(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): HomeFragmentBinding {
         return HomeFragmentBinding.inflate(inflater, container, false)
@@ -25,7 +28,24 @@ class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchV
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-        binding.imageView
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.searchRecipes.collect {
+                when(it.status) {
+                    Status.LOADING -> {
+                        Log.d("Tag", "Loading Data...")
+                    }
+                    Status.SUCCESS -> {
+                        Log.d("Tag", "Success: ${it.data}")
+                    }
+                    Status.FAILURE -> {
+                        it.responseBody?.let { responseBody ->
+                            Log.d("Tag", "${convertResponseToDataClass<FailureResponse>(responseBody)}")
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -42,7 +62,7 @@ class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchV
 
     override fun onQueryTextChange(newText: String?): Boolean {
         newText?.let {
-            Log.d("Tag", "$newText")
+            viewModel.searchRecipes(it)
         }
         return true
     }
