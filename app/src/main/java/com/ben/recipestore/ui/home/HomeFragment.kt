@@ -9,27 +9,23 @@ import com.ben.recipestore.R
 import com.ben.recipestore.databinding.HomeFragmentBinding
 import com.ben.recipestore.ui.BaseFragment
 
-class HomeFragment : BaseFragment<HomeFragmentBinding>(), SearchView.OnQueryTextListener {
+class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchView.OnQueryTextListener {
 
     companion object {
         fun newInstance() = HomeFragment()
     }
 
-    private lateinit var viewModel: HomeViewModel
 
     override fun bindFragment(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): HomeFragmentBinding {
         return HomeFragmentBinding.inflate(inflater, container, false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
+    override fun bindViewModel(): Class<HomeViewModel> = HomeViewModel::class.java
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
-        // TODO: Use the ViewModel
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setHasOptionsMenu(true)
+        binding.imageView
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -39,7 +35,6 @@ class HomeFragment : BaseFragment<HomeFragmentBinding>(), SearchView.OnQueryText
         val searchItem = menu.findItem(R.id.home_fragment_search)
         val searchView = searchItem.actionView as? SearchView
 
-//        searchView?.isSubmitButtonEnabled = true
         searchView?.maxWidth = Int.MAX_VALUE
         searchView?.setOnQueryTextListener(this)
     }
@@ -49,7 +44,6 @@ class HomeFragment : BaseFragment<HomeFragmentBinding>(), SearchView.OnQueryText
         newText?.let {
             Log.d("Tag", "$newText")
         }
-
         return true
     }
 
