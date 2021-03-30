@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.ben.recipestore.R
 import com.ben.recipestore.databinding.HomeFragmentBinding
 import com.ben.recipestore.model.FailureResponse
@@ -13,11 +15,19 @@ import com.ben.recipestore.network.ResponseHandler
 import com.ben.recipestore.network.Status
 import com.ben.recipestore.repository.RecipeStoreRepository
 import com.ben.recipestore.ui.BaseFragment
+import com.ben.recipestore.ui.adapter.RecipeAdapter
+import com.bumptech.glide.RequestManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchView.OnQueryTextListener {
+
+    @Inject lateinit var glideRequestManager: RequestManager
+
+    private val recipeAdapter by lazy { RecipeAdapter(glideRequestManager) }
+    private lateinit var recipeRecyclerView: RecyclerView
 
     override fun bindFragment(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): HomeFragmentBinding {
         return HomeFragmentBinding.inflate(inflater, container, false)
@@ -28,7 +38,7 @@ class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchV
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-
+        setupRecyclerView()
         lifecycleScope.launchWhenStarted {
             viewModel.searchRecipes.collect {
                 when(it.status) {
@@ -36,7 +46,9 @@ class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchV
                         Log.d("Tag", "Loading Data...")
                     }
                     Status.SUCCESS -> {
-                        Log.d("Tag", "Success: ${it.data}")
+                        it.data?.results?.let { results ->
+                            recipeAdapter.addItems(results)
+                        }
                     }
                     Status.FAILURE -> {
                         it.responseBody?.let { responseBody ->
@@ -45,6 +57,14 @@ class HomeFragment : BaseFragment<HomeFragmentBinding, HomeViewModel>(), SearchV
                     }
                 }
             }
+        }
+    }
+
+    private fun setupRecyclerView() {
+        recipeRecyclerView = binding.recipeRecyclerView
+        recipeRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+            adapter = recipeAdapter
         }
     }
 
